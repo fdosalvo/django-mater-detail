@@ -1,0 +1,50 @@
+<div class="modal-header">
+    <h5 class="modal-title" id="crearCampañaModalLabel">Crear Nueva Campaña</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <form id="headerForm" method="post">
+        {% csrf_token %}
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="form-group row">
+                    <label for="{{ form.start_date.id_for_label }}" class="col-sm-4 col-form-label">Fecha Inicio</label>
+                    <div class="col-sm-8">
+                        {{ form.start_date }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group row">
+                    <label for="{{ form.end_date.id_for_label }}" class="col-sm-4 col-form-label">Fecha Fin</label>
+                    <div class="col-sm-8">
+                        {{ form.end_date }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row mb-3">
+            <label for="{{ form.description.id_for_label }}" class="col-sm-4 col-form-label">Descripción</label>
+            <div class="col-sm-8">
+                {{ form.description }}
+            </div>
+        </div>
+        <div class="form-group row mb-3">
+            <label for="{{ form.quantity.id_for_label }}" class="col-sm-4 col-form-label">Cantidad</label>
+            <div class="col-sm-8">
+                {{ form.quantity }}
+            </div>
+        </div>
+        <div class="form-group row mb-3">
+            <label for="{{ form.message.id_for_label }}" class="col-sm-4 col-form-label">Mensaje</label>
+            <div class="col-sm-8">
+                {{ form.message }}
+            </div>
+        </div>
+        <div id="form-errors" class="alert alert-danger" style="display: none;"></div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+</div>
