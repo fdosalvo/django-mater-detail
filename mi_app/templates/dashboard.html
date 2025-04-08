@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Campañas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dashboard-container {
+            padding: 20px;
+        }
+
+        .chart-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container dashboard-container">
+        <h1>Dashboard de Campañas</h1>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Campañas</h5>
+                        <p id="totalHeaders">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Promedio Cantidad</h5>
+                        <p id="avgQuantity">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Campañas Activas</h5>
+                        <p id="activeHeaders">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 chart-container">
+                <canvas id="headersByMonthChart"></canvas>
+            </div>
+            <div class="col-md-6 chart-container">
+                <canvas id="detailsStatusChart"></canvas>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 chart-container">
+                <canvas id="detailsAvgTimesChart"></canvas>
+            </div>
+            <div class="col-md-6 chart-container">
+                <canvas id="detailsByDayChart"></canvas>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <table id="headersTable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Descripción</th>
+                            <th>Cantidad</th>
+                            <th>Mensaje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: '/dashboard/data/',
+                type: 'GET',
+                success: function (data) {
+                    console.log('Datos recibidos del servidor:', data); // Depuración
+
+                    // Actualizar métricas
+                    $('#totalHeaders').text(data.total_headers);
+                    $('#avgQuantity').text(data.avg_quantity);
+                    $('#activeHeaders').text(data.active_headers);
+
+                    // Crear gráficos
+                    createHeadersByMonthChart(data.headers_by_month);
+                    createDetailsStatusChart(data.details_status);
+                    createDetailsAvgTimesChart(data.details_avg_times);
+                    createDetailsByDayChart(data.details_by_day);
+
+                    // Llenar tabla de campañas
+                    populateHeadersTable(data.headers_data);
+                },
+                error: function (error) {
+                    console.error('Error al obtener datos:', error);
+                }
+            });
+
+            function createHeadersByMonthChart(data) {
+                if (data && data.length > 0) {
+                    const ctx = document.getElementById('headersByMonthChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.map(item => item.month.substring(0, 7)),
+                            datasets: [{
+                                label: 'Campañas por Mes',
+                                data: data.map(item => item.count),
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.error('Datos de headers_by_month no válidos:', data);
+                }
+            }
+
+            function createDetailsStatusChart(data) {
+                if (data && data.length > 0) {
+                    const ctx = document.getElementById('detailsStatusChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: data.map(item => item.status ? 'Activo' : 'Inactivo'),
+                            datasets: [{
+                                data: data.map(item => item.count),
+                                backgroundColor: ['rgba(75, 192, 192, 0.5)', 'rgba(255, 99, 132, 0.5)'],
+                                borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+                                borderWidth: 1
+                            }]
+                        }
+                    });
+                } else {
+                    console.error('Datos de details_status no válidos:', data);
+                }
+            }
+
+            function createDetailsAvgTimesChart(data) {
+                if (data && data.length > 0) {
+                    const ctx = document.getElementById('detailsAvgTimesChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(item => item.month.substring(0, 7)),
+                            datasets: [{
+                                label: 'Promedio Veces por Mes',
+                                data: data.map(item => item.avg_times),
+                                borderColor: 'rgba(255, 206, 86, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.error('Datos de details_avg_times no válidos:', data);
+                }
+            }
+
+            function createDetailsByDayChart(data) {
+                if (data && data.length > 0) {
+                    const ctx = document.getElementById('detailsByDayChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(item => item.send_date_cast),
+                            datasets: [{
+                                label: 'Envios por dia',
+                                data: data.map(item => item.count),
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    console.error('Datos de details_by_day no válidos:', data);
+                }
+            }
+
+            function populateHeadersTable(data) {
+                const tableBody = $('#headersTable tbody');
+                tableBody.empty();
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const fields = item.fields;
+                        tableBody.append(`
+                            <tr>
+                                <td>${fields.start_date}</td>
+                                <td>${fields.end_date}</td>
+                                <td>${fields.description}</td>
+                                <td>${fields.quantity}</td>
+                                <td>${fields.message}</td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    console.error('Datos de headers_data no válidos:', data);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
